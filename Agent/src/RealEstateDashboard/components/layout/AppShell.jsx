@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import AgentChat from '../agent/AgentChat';
 
-const AppShell = () => {
+const AppShell = ({ isClient = false }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -13,6 +13,7 @@ const AppShell = () => {
             <Sidebar
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
+                isClient={isClient}
             />
 
             {/* Main Content Area */}

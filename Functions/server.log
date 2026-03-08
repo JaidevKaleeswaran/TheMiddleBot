@@ -1,0 +1,14 @@
+[dotenv@17.3.1] injecting env (11) from .env -- tip: ⚙️  override existing env vars with { override: true }
+Telephony Engine running on http://localhost:3005
+[2026-03-08T22:02:49.111Z] POST /api/call
+Outbound call failed: Error: ElevenLabs API failed: {"detail":"Method Not Allowed"}
+    at /Users/jaidevkaleeswaran/TheMiddleBot/Functions/server.js:45:19
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2026-03-08T22:03:08.372Z] POST /api/call
+Outbound call failed: Error: ElevenLabs API failed: {"detail":"Method Not Allowed"}
+    at /Users/jaidevkaleeswaran/TheMiddleBot/Functions/server.js:45:19
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2026-03-08T22:12:31.157Z] POST /api/call
+Outbound call failed: Error: ElevenLabs API failed: {"detail":"Method Not Allowed"}
+    at /Users/jaidevkaleeswaran/TheMiddleBot/Functions/server.js:45:19
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

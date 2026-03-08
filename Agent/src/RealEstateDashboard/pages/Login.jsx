@@ -36,11 +36,20 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    navigate('/dashboard')
+    if (role === 'client') {
+      navigate('/client/dashboard')
+    } else {
+      navigate('/dashboard')
+    }
   }
 
   const handleGoogleLogin = async () => {
-    navigate('/dashboard')
+    // For demo, we just navigate based on the role toggle
+    if (role === 'client') {
+      navigate('/client/dashboard')
+    } else {
+      navigate('/dashboard')
+    }
   }
 
   return (
