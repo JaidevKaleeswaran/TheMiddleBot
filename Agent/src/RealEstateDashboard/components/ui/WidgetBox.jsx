@@ -22,7 +22,7 @@ const WidgetBox = ({ title, children, className = '', actionButton = null, title
             )}
 
             {/* Content */}
-            <div className="flex-1 p-5 overflow-hidden flex flex-col relative">
+            <div className="flex-1 p-5 flex flex-col relative">
                 {children}
             </div>
         </div>

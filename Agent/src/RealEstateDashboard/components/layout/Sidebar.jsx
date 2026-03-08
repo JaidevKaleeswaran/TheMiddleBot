@@ -2,14 +2,34 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Bot, LayoutDashboard, Users, Home, TrendingUp, Clock, FileText, Settings, X } from 'lucide-react';
 
-const Sidebar = ({ isOpen, onClose }) => {
-    const navItems = [
+const Sidebar = ({ isOpen, onClose, isClient = false }) => {
+    const agentNavItems = [
         { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
         { name: 'Clients', icon: Users, path: '/dashboard/clients' },
         { name: 'Properties', icon: Home, path: '/dashboard/properties' },
         { name: 'Bids', icon: TrendingUp, path: '/dashboard/bids' },
         { name: 'Deadlines', icon: Clock, path: '/dashboard/deadlines' },
     ];
+
+    const clientNavItems = [
+        { name: 'My Dashboard', icon: LayoutDashboard, path: '/client/dashboard' },
+        { name: 'Properties', icon: Home, path: '/dashboard/properties' },
+        { name: 'Market Info', icon: TrendingUp, path: '/dashboard/bids' },
+        { name: 'My Schedule', icon: Clock, path: '/dashboard/deadlines' },
+    ];
+
+    const navItems = isClient ? clientNavItems : agentNavItems;
+
+    // User data for profile at bottom
+    const userProfile = isClient ? {
+        name: 'Johini Eirana',
+        role: 'Home Buyer',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Johini'
+    } : {
+        name: 'David Grey. H',
+        role: 'Project Manager',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=475569'
+    };
 
     return (
         <>
@@ -66,15 +86,15 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div className="p-4 border-t border-slate-800/50 m-2 mt-auto rounded-2xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer flex items-center gap-3">
                     <div className="relative">
                         <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=475569"
+                            src={userProfile.avatar}
                             alt="User Avatar"
                             className="w-10 h-10 rounded-full border-2 border-slate-700 object-cover bg-slate-800"
                         />
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">David Grey. H</p>
-                        <p className="text-xs text-slate-400 truncate">Project Manager</p>
+                        <p className="text-sm font-semibold text-white truncate">{userProfile.name}</p>
+                        <p className="text-xs text-slate-400 truncate">{userProfile.role}</p>
                     </div>
                 </div>
             </aside>

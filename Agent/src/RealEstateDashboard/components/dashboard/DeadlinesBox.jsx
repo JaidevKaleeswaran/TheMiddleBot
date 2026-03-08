@@ -13,7 +13,7 @@ const icons = {
 const DeadlinesBox = () => {
     return (
         <WidgetBox title="Upcoming Deadlines" titleHref="/dashboard/deadlines">
-            <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 custom-scrollbar hide-scroll-ui">
+            <div className="flex items-center justify-between gap-4 overflow-x-auto pb-4 custom-scrollbar hide-scroll-ui relative">
                 {/* Progress Line */}
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-700/50 -z-10 translate-y-[-14px]"></div>
 

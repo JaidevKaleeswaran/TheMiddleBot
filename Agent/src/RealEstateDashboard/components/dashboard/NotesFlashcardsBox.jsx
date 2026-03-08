@@ -39,7 +39,7 @@ const NotesFlashcardsBox = () => {
                 </button>
             </div>
 
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 relative">
                 {/* Notes View */}
                 {activeTab === 'notes' && (
                     <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-3">

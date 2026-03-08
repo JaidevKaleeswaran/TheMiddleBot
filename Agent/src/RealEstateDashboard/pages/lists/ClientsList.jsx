@@ -1,9 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Search, Filter, MoreVertical, Phone, Mail } from 'lucide-react';
 import { mockClients } from '../../services/mockData';
+import RecordCallModal from '../../components/shared/RecordCallModal';
+import MessagingModal from '../../components/shared/MessagingModal';
 
 const ClientsList = () => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [callClientId, setCallClientId] = useState(null);
+    const [messageClientId, setMessageClientId] = useState(null);
+    const [updater, setUpdater] = useState(0);
+
+    const handleAddClient = () => {
+        const name = prompt("Enter client name:");
+        if (!name) return;
+        const phone = prompt("Enter client phone number (e.g. +14155552671):");
+        if (!phone) return;
+
+        const newClient = {
+            id: Date.now(),
+            name,
+            phone,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name.replace(' ', '')}`,
+            importanceScore: 50,
+            tier: 'Normal'
+        };
+        mockClients.unshift(newClient);
+        setUpdater(prev => prev + 1);
+    };
+
+    const filteredClients = mockClients.filter(client => {
+        const q = searchQuery.toLowerCase();
+        return client.name.toLowerCase().includes(q) || client.phone.includes(q);
+    });
+
     return (
         <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto animate-fade-in pb-10">
             <div className="flex items-center gap-4">
@@ -11,7 +41,10 @@ const ClientsList = () => {
                     <ArrowLeft size={20} />
                 </Link>
                 <h1 className="text-2xl font-bold text-white flex-1">Active Clients</h1>
-                <button className="flex items-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5">
+                <button
+                    onClick={handleAddClient}
+                    className="flex items-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5"
+                >
                     <UserPlus size={18} /> Add Client
                 </button>
             </div>
@@ -21,7 +54,9 @@ const ClientsList = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
                         type="text"
-                        placeholder="Search clients by name, email or phone..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search clients by name or phone..."
                         className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-brand-500/50 transition-colors"
                     />
                 </div>
@@ -32,8 +67,8 @@ const ClientsList = () => {
                 </div>
             </div>
 
-            <div className="bg-surface-card rounded-2xl border border-slate-700/50 overflow-hidden">
-                <table className="w-full text-left">
+            <div className="bg-surface-card rounded-2xl border border-slate-700/50 overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left min-w-[800px]">
                     <thead>
                         <tr className="bg-slate-800/40 border-b border-slate-700/50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                             <th className="px-6 py-4">Client</th>
@@ -44,14 +79,14 @@ const ClientsList = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50">
-                        {mockClients.map((client) => (
+                        {filteredClients.map((client) => (
                             <tr key={client.id} className="hover:bg-slate-800/30 transition-colors group">
                                 <td className="px-6 py-4">
                                     <Link to={`/dashboard/clients/${client.id}`} className="flex items-center gap-3">
                                         <img src={client.avatar} alt={client.name} className="w-10 h-10 rounded-full border border-slate-700" />
                                         <div>
                                             <div className="text-sm font-bold text-white group-hover:text-brand-400 transition-colors">{client.name}</div>
-                                            <div className="text-xs text-slate-500">{client.phone}</div>
+                                            <div className="text-xs text-slate-300 font-medium">{client.phone}</div>
                                         </div>
                                     </Link>
                                 </td>
@@ -79,16 +114,44 @@ const ClientsList = () => {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-2 text-slate-400">
-                                        <button className="p-2 hover:bg-slate-700/50 rounded-lg hover:text-white transition-colors"><Phone size={16} /></button>
-                                        <button className="p-2 hover:bg-slate-700/50 rounded-lg hover:text-white transition-colors"><Mail size={16} /></button>
+                                        <button
+                                            onClick={() => setCallClientId(client.id)}
+                                            className="p-2 hover:bg-slate-700/50 rounded-lg hover:text-white transition-colors"
+                                        >
+                                            <Phone size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => setMessageClientId(client.id)}
+                                            className="p-2 hover:bg-slate-700/50 rounded-lg hover:text-white transition-colors"
+                                        >
+                                            <Mail size={16} />
+                                        </button>
                                         <button className="p-2 hover:bg-slate-700/50 rounded-lg hover:text-white transition-colors"><MoreVertical size={16} /></button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
+                        {filteredClients.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                    No clients match your search.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
+
+            <RecordCallModal
+                isOpen={callClientId !== null}
+                onClose={() => setCallClientId(null)}
+                clientId={callClientId}
+            />
+            <MessagingModal
+                isOpen={messageClientId !== null}
+                onClose={() => setMessageClientId(null)}
+                clientId={messageClientId}
+            />
         </div>
     );
 };

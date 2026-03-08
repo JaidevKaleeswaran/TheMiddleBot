@@ -1,33 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Phone, Mail, Calendar, MapPin, DollarSign, TrendingUp, AlertCircle, Sparkles, Mic } from 'lucide-react';
-import { mockClients, mockProperties } from '../../services/mockData';
+import { mockClients, mockProperties, mockDealProbabilities } from '../../services/mockData';
 import WidgetBox from '../../components/ui/WidgetBox';
 import KpiCard from '../../components/dashboard/KpiCard';
+import RecordCallModal from '../../components/shared/RecordCallModal';
+import MessagingModal from '../../components/shared/MessagingModal';
 
 const ClientProfile = () => {
     const { clientId } = useParams();
-    const [isCalling, setIsCalling] = useState(false);
-    const [callTime, setCallTime] = useState(0);
+    const [showRecordModal, setShowRecordModal] = useState(false);
+    const [showMessaging, setShowMessaging] = useState(false);
 
-    useEffect(() => {
-        let interval;
-        if (isCalling) {
-            interval = setInterval(() => setCallTime(prev => prev + 1), 1000);
-        } else {
-            clearInterval(interval);
-            setCallTime(0);
-        }
-        return () => clearInterval(interval);
-    }, [isCalling]);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Parse to int if your mock data IDs are integers
     const client = mockClients.find(c => c.id === parseInt(clientId)) || mockClients.find(c => c.id === clientId);
 
     if (!client) {
@@ -41,46 +25,11 @@ const ClientProfile = () => {
         );
     }
 
-    // Mock target property based on whatever property ID is linked or just a random one for demo
     const targetProperty = mockProperties[0];
+    const clientDeal = mockDealProbabilities.find(d => d.clientId === client.id);
 
     return (
         <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto animate-fade-in pb-10">
-            {/* Call Overlay */}
-            {isCalling && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-fade-in" />
-                    <div className="relative z-10 flex flex-col items-center animate-slide-up">
-                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-emerald-500 shadow-2xl mb-6 relative">
-                            <img src={client.avatar} alt={client.name} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-emerald-500/20 animate-pulse" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Calling {client.name}...</h2>
-                        <div className="text-xl font-mono text-emerald-400 font-bold mb-12">{formatTime(callTime)}</div>
-
-                        <div className="flex gap-8">
-                            <button className="w-16 h-16 rounded-full bg-slate-800 text-white flex items-center justify-center border border-slate-700 hover:bg-slate-700 transition-colors">
-                                <Mic size={24} />
-                            </button>
-                            <button
-                                onClick={() => setIsCalling(false)}
-                                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-500/40 hover:bg-red-600 transition-all scale-110"
-                            >
-                                <Phone size={24} className="rotate-[135deg]" fill="currentColor" />
-                            </button>
-                            <button className="w-16 h-16 rounded-full bg-slate-800 text-white flex items-center justify-center border border-slate-700 hover:bg-slate-700 transition-colors">
-                                <Mail size={24} />
-                            </button>
-                        </div>
-
-                        <div className="mt-16 flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
-                            <Sparkles size={16} className="text-brand-400" />
-                            <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">ElevenLabs Real-time Transcription</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Header Navigation */}
             <div className="flex items-center gap-4 mb-2">
                 <Link to="/dashboard" className="p-2 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg text-slate-300 transition-colors">
@@ -89,7 +38,7 @@ const ClientProfile = () => {
                 <h1 className="text-2xl font-bold text-white flex-1">{client.name}'s Profile</h1>
 
                 <button
-                    onClick={() => setIsCalling(true)}
+                    onClick={() => setShowRecordModal(true)}
                     className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
                 >
                     <Phone size={18} fill="currentColor" /> Call Client
@@ -112,11 +61,21 @@ const ClientProfile = () => {
                         <div className="flex flex-col items-center text-center">
                             <img src={client.avatar} alt={client.name} className="w-24 h-24 rounded-full border-4 border-slate-700 shadow-xl mb-4" />
                             <h2 className="text-xl font-bold text-white mb-1">{client.name}</h2>
-                            <p className="text-sm text-slate-400 font-medium">Active Buyer</p>
+                            <p className="text-sm text-slate-400 font-medium">{client.phone}</p>
 
                             <div className="flex gap-3 mt-4">
-                                <button className="p-2.5 bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 rounded-full transition-colors"><Phone size={18} /></button>
-                                <button className="p-2.5 bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 rounded-full transition-colors"><Mail size={18} /></button>
+                                <button
+                                    onClick={() => setShowRecordModal(true)}
+                                    className="p-2.5 bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 rounded-full transition-colors"
+                                >
+                                    <Phone size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setShowMessaging(true)}
+                                    className="p-2.5 bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 rounded-full transition-colors"
+                                >
+                                    <Mail size={18} />
+                                </button>
                             </div>
                         </div>
                     </WidgetBox>
@@ -126,8 +85,8 @@ const ClientProfile = () => {
                     <KpiCard
                         title="Chance of Buying"
                         value={`${client.importanceScore + 5}%`}
-                        trend="+12% this week"
-                        isPositive={true}
+                        trend={clientDeal && clientDeal.trend === 'up' ? '+12% this week' : '-5% this week'}
+                        isPositive={clientDeal ? clientDeal.trend === 'up' : false}
                         gradientTheme="pink-peach"
                     />
                     <KpiCard
@@ -157,7 +116,7 @@ const ClientProfile = () => {
                                 <img src={targetProperty.image} alt={targetProperty.address} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                                 <div className="absolute bottom-3 left-3 right-3 text-white font-bold text-lg drop-shadow-md truncate">
-                                    {targetProperty.price}
+                                    ${(targetProperty.price / 1000)}K
                                 </div>
                             </div>
 
@@ -201,14 +160,29 @@ const ClientProfile = () => {
                                     <Sparkles size={16} className="text-indigo-400" />
                                     <h4 className="font-bold text-indigo-300">Featherless AI Strategy</h4>
                                 </div>
-                                <p className="text-sm text-slate-300 leading-relaxed mb-3">
-                                    {client.name} is extremely motivated due to a looming lease expiration. They are pre-approved up to $1.35M but are targeting properties around $1.2M. Recommend showing them 456 Oak Ave immediately before the open house this weekend.
-                                </p>
-                                <ul className="text-sm text-slate-400 list-disc pl-5 space-y-1">
-                                    <li>Schedule showing for 456 Oak Ave ASAP</li>
-                                    <li>Prepare CMA for the neighborhood</li>
-                                    <li>Send follow-up SMS about mortgage rate drops</li>
-                                </ul>
+                                {clientDeal ? (
+                                    <>
+                                        <p className="text-sm text-slate-300 leading-relaxed mb-3">
+                                            {client.name} has a {clientDeal.probability}% chance of closing on {clientDeal.property}. The trend is currently {clientDeal.trend}. Let's capitalize on their driving factors to seal the deal.
+                                        </p>
+                                        <ul className="text-sm text-slate-400 list-disc pl-5 space-y-1">
+                                            {clientDeal.factors.map((factor, idx) => (
+                                                <li key={idx}>Leverage: {factor}</li>
+                                            ))}
+                                            <li>Follow up directly regarding {clientDeal.property}</li>
+                                        </ul>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-sm text-slate-300 leading-relaxed mb-3">
+                                            {client.name} is exploring options. No active deals identified yet. Engage them with general market updates to gauge interest level.
+                                        </p>
+                                        <ul className="text-sm text-slate-400 list-disc pl-5 space-y-1">
+                                            <li>Send customized CMA for target neighborhoods</li>
+                                            <li>Schedule a casual check-in call</li>
+                                        </ul>
+                                    </>
+                                )}
                             </div>
 
                             <div className="p-3 border border-slate-700/50 rounded-lg bg-slate-800/20">
@@ -223,6 +197,18 @@ const ClientProfile = () => {
                     </WidgetBox>
                 </div>
             </div>
+
+            {/* Modals */}
+            <RecordCallModal
+                isOpen={showRecordModal}
+                onClose={() => setShowRecordModal(false)}
+                clientId={client.id}
+            />
+            <MessagingModal
+                isOpen={showMessaging}
+                onClose={() => setShowMessaging(false)}
+                clientId={client.id}
+            />
         </div>
     );
 };
