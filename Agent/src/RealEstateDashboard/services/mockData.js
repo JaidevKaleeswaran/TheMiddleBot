@@ -1,12 +1,12 @@
 // Enable mutable exports for session updates
 export let mockClients = [
-    { id: 1, name: 'Johini Eirana', phone: '+14158329174', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Johini', importanceScore: 92, tier: 'Critical' },
+    { id: 1, name: 'Johini Eirana', phone: '+15105571410', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Johini', importanceScore: 92, tier: 'Critical' },
     { id: 2, name: 'Barara Fuders', phone: '+16284453201', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Barara', importanceScore: 78, tier: 'High' },
     { id: 3, name: 'Amiator Smith', phone: '+15102987634', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amiator', importanceScore: 65, tier: 'Normal' },
     { id: 4, name: 'Henny Darman', phone: '+19256174082', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Henny', importanceScore: 88, tier: 'Critical' },
     { id: 5, name: 'Alex Johnson', phone: '+14085539210', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', importanceScore: 45, tier: 'Low' },
     { id: 6, name: 'Sarah Miller', phone: '+16503718456', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', importanceScore: 95, tier: 'Critical' },
-    { id: 7, name: 'Kushal M.', phone: '+15107669857', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kushal', importanceScore: 72, tier: 'High' },
+    { id: 7, name: 'Kushal M.', phone: '+15105571410', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kushal', importanceScore: 72, tier: 'High' },
 ];
 
 export let mockNotes = [

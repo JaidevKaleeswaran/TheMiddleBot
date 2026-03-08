@@ -41,6 +41,7 @@ const ClientRankingBox = () => {
                                 <img src={client.avatar} alt={client.name} className="w-8 h-8 rounded-full bg-slate-800 ring-1 ring-slate-700" />
                                 <div>
                                     <div className="text-sm font-semibold text-slate-200 truncate">{client.name}</div>
+                                    <div className="text-[10px] text-slate-500 font-medium">{client.phone}</div>
                                 </div>
                             </div>
 

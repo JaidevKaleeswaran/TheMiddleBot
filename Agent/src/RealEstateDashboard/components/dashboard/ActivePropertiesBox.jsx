@@ -32,10 +32,15 @@ const ActivePropertiesBox = () => {
                                     <div>
                                         <p className="text-xs text-slate-500 font-medium">Top Bid</p>
                                         <p className="text-sm font-bold text-brand-400">${(prop.maxBid / 1000)}K</p>
+                                        {topBidder && (
+                                            <p className="text-[9px] text-slate-500 mt-0.5 truncate max-w-[80px]">by {topBidder.bidderName}</p>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-danger bg-danger/10 px-2 py-1 rounded whitespace-nowrap border border-danger/20">
-                                        <Clock size={12} />
-                                        <span className="text-[10px] font-bold tracking-tight">{prop.sellBy}</span>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <div className="flex items-center gap-1.5 text-danger bg-danger/10 px-2 py-1 rounded whitespace-nowrap border border-danger/20">
+                                            <Clock size={12} />
+                                            <span className="text-[10px] font-bold tracking-tight">{prop.sellBy}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

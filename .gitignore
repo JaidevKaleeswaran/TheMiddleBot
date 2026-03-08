@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+Agent/node_modules/
+Functions/node_modules/
+
+# Environment variables
+.env
+Agent/.env
+Functions/.env
+
+# Logs
+*.log
+Agent/server.log
+Functions/server.log
+
+# Build outputs
+dist/
+Agent/dist/
+
+# OS files
+.DS_Store
+
+# Temporary files
+Functions/temp_audio/

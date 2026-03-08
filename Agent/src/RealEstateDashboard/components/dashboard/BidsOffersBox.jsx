@@ -129,7 +129,15 @@ const BidsOffersBox = () => {
                                 Cancel
                             </button>
                             <button
-                                onClick={() => setShowModal(false)}
+                                onClick={() => {
+                                    const btn = document.getElementById('sendBiddersBtn');
+                                    btn.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Sending...</span>';
+                                    setTimeout(() => {
+                                        setShowModal(false);
+                                        alert(`Update successfully sent to all other bidders for ${selectedProperty}!`);
+                                    }, 1000);
+                                }}
+                                id="sendBiddersBtn"
                                 className="px-6 py-2 bg-brand-500 hover:bg-brand-400 text-white text-sm font-semibold rounded-lg shadow-lg shadow-brand-500/20 transition-all hover:-translate-y-0.5"
                             >
                                 Send to All Bidders

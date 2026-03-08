@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import KpiCard from '../components/dashboard/KpiCard';
 import ClientRankingBox from '../components/dashboard/ClientRankingBox';
 import ActivePropertiesBox from '../components/dashboard/ActivePropertiesBox';
@@ -7,43 +7,31 @@ import NotesFlashcardsBox from '../components/dashboard/NotesFlashcardsBox';
 import DeadlinesBox from '../components/dashboard/DeadlinesBox';
 import QuickActionsBox from '../components/dashboard/QuickActionsBox';
 import DealProbabilityBox from '../components/dashboard/DealProbabilityBox';
-import ClientCommBox from '../components/dashboard/ClientCommBox';
-import { Database, CheckCircle2, Loader2 } from 'lucide-react';
 
 import { kpiData } from '../services/mockData';
 import { seedFirebase } from '../services/seedFirebase';
 
 const Dashboard = () => {
-    const [seedStatus, setSeedStatus] = useState(null); // null | 'loading' | 'done' | 'error'
+    const hasSeeded = useRef(false);
 
-    const handleSeedFirebase = async () => {
-        setSeedStatus('loading');
-        const result = await seedFirebase();
-        setSeedStatus(result.success ? 'done' : 'error');
-        setTimeout(() => setSeedStatus(null), 4000);
-    };
+    // Automatically sync data to Firebase on first load
+    useEffect(() => {
+        if (!hasSeeded.current) {
+            hasSeeded.current = true;
+            seedFirebase()
+                .then(result => {
+                    if (result.success) {
+                        console.log('✅ Firebase auto-synced on dashboard load');
+                    } else {
+                        console.warn('⚠️ Firebase auto-sync failed:', result.error);
+                    }
+                })
+                .catch(err => console.warn('⚠️ Firebase auto-sync error:', err));
+        }
+    }, []);
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto animate-fade-in relative z-10 pb-32">
-            {/* Seed Firebase Banner */}
-            <div className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-xl px-4 py-2">
-                <span className="text-xs text-slate-400 font-medium">Admin Tools</span>
-                <button
-                    onClick={handleSeedFirebase}
-                    disabled={seedStatus === 'loading'}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${seedStatus === 'done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                        seedStatus === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                            seedStatus === 'loading' ? 'bg-slate-700 text-slate-300 border border-slate-600' :
-                                'bg-brand-500/10 text-brand-400 border border-brand-500/20 hover:bg-brand-500/20'
-                        }`}
-                >
-                    {seedStatus === 'loading' ? <><Loader2 size={14} className="animate-spin" /> Seeding...</> :
-                        seedStatus === 'done' ? <><CheckCircle2 size={14} /> Data Synced to Firebase!</> :
-                            seedStatus === 'error' ? 'Seed Failed — Retry' :
-                                <><Database size={14} /> Sync All Data to Firebase</>}
-                </button>
-            </div>
-
+        <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto animate-fade-in relative z-10 pb-12">
             {/* KPI Row (Top) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard
@@ -114,9 +102,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Fixed Bottom Comm Tab */}
-            <ClientCommBox />
         </div>
     );
 };

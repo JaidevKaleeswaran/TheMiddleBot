@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { processAIPipeline } from '../../services/aiPipeline';
 import { mockClients } from '../../services/mockData';
-import { Phone, Mic, Square, Sparkles, X, Loader2, CheckCircle2, PhoneCall, User } from 'lucide-react';
+import { Phone, Mic, Square, Sparkles, X, Loader2, CheckCircle2, PhoneCall, User, Bot, UserVoice } from 'lucide-react';
 
 const ELEVENLABS_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
 
@@ -13,9 +13,19 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
     const [telephonyActive, setTelephonyActive] = useState(false);
     const [isCalling, setIsCalling] = useState(false);
 
-    // Allow user to select a client if opened globally
+    // Live Transcript State
+    const [liveTranscript, setLiveTranscript] = useState([]);
+    const [liveNotes, setLiveNotes] = useState(null);
+    const transcriptEndRef = useRef(null);
+
     const [selectedClientId, setSelectedClientId] = useState(null);
 
+    // Auto-scroll transcript
+    useEffect(() => {
+        transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [liveTranscript]);
+
+    // Timer
     useEffect(() => {
         let interval;
         if (isRecording || telephonyActive) {
@@ -29,7 +39,37 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
         return () => clearInterval(interval);
     }, [isRecording, telephonyActive]);
 
-    // Reset state when modal opens/closes
+    // SSE connection for live tracking
+    useEffect(() => {
+        let eventSource;
+        if (telephonyActive) {
+            eventSource = new EventSource('http://localhost:3005/api/live-transcript');
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'agent_speaking' || data.type === 'user_speaking') {
+                    setLiveTranscript(prev => [...prev, {
+                        id: Date.now() + Math.random(),
+                        role: data.type === 'agent_speaking' ? 'assistant' : 'user',
+                        text: data.text,
+                        time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    }]);
+                } else if (data.type === 'note_created') {
+                    setLiveNotes(true); // Indicate notes were synced
+                } else if (data.type === 'call_ended') {
+                    setTelephonyActive(false);
+                    setCompletionStatus('success');
+                }
+            };
+        }
+
+        return () => {
+            if (eventSource) eventSource.close();
+        };
+    }, [telephonyActive]);
+
+    // Reset state
     useEffect(() => {
         if (!isOpen) {
             setIsRecording(false);
@@ -37,9 +77,10 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
             setCompletionStatus(null);
             setRecordingTime(0);
             setTelephonyActive(false);
-            // DO NOT reset selectedClientId here so it persists during selection
+            setLiveTranscript([]);
+            setLiveNotes(null);
         } else if (clientId) {
-            setSelectedClientId(clientId); // Set initial client if provided
+            setSelectedClientId(clientId);
         }
     }, [isOpen, clientId]);
 
@@ -57,16 +98,12 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
             return;
         }
 
-        if (!ELEVENLABS_AGENT_ID) {
-            alert("Missing ELEVENLABS_AGENT_ID in your configuration.");
-            return;
-        }
-
         setIsCalling(true);
         setCompletionStatus(null);
+        setLiveTranscript([]);
+        setLiveNotes(null);
 
         try {
-            // Initiate the phone call via the local backend router
             const res = await fetch('http://localhost:3005/api/call', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,14 +127,14 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
 
         } catch (error) {
             console.error("Failed to start phone call:", error);
-            alert(`Failed to dialout: ${error.message}\n\nMake sure the Telephony Engine is running on port 3005.`);
+            alert(`Failed to dialout: ${error.message}\n\nMake sure the Telephony Engine is running (node server.js in Functions/).`);
             setIsCalling(false);
         }
     };
 
     const endTelephonyCall = () => {
         setTelephonyActive(false);
-        handlePipelineProcessing();
+        setCompletionStatus('success');
     };
 
     const handlePipelineProcessing = async () => {
@@ -133,7 +170,6 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
 
     if (!isOpen) return null;
 
-    // View for selecting a client if one wasn't passed in
     if (!currentClient) {
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -152,12 +188,12 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                             <button
                                 key={client.id}
                                 onClick={() => setSelectedClientId(client.id)}
-                                className="w-full text-left p-3 rounded-xl hover:bg-slate-800/80 transition-colors flex items-center gap-3 border border-transparent hover:border-slate-700"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-slate-700 transition-all group text-left"
                             >
-                                <img src={client.avatar} alt="" className="w-8 h-8 rounded-full bg-slate-800" />
+                                <img src={client.avatar} alt={client.name} className="w-10 h-10 rounded-full bg-slate-700" />
                                 <div>
-                                    <div className="text-white font-bold text-sm">{client.name}</div>
-                                    <div className="text-slate-500 text-xs">{client.phone}</div>
+                                    <div className="text-white font-medium group-hover:text-brand-400 transition-colors">{client.name}</div>
+                                    <div className="text-xs text-slate-400">{client.tier} Tier · Score {client.importanceScore}</div>
                                 </div>
                             </button>
                         ))}
@@ -170,13 +206,16 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => !isRecording && !isProcessing && !telephonyActive && onClose()} />
-            <div className="relative z-10 w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
-                <div className="p-6 text-center">
-                    <div className="flex justify-between items-center mb-6">
+
+            <div className={`relative z-10 w-full transition-all duration-500 ${telephonyActive || liveTranscript.length > 0 ? 'max-w-4xl' : 'max-w-lg'} bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-slide-up`}>
+
+                {/* Left Side: Controls */}
+                <div className="p-8 text-center flex-1 flex flex-col justify-center border-r border-slate-800/50 bg-slate-900/50">
+                    <div className="flex justify-between items-center mb-8">
                         <div className="flex items-center gap-2 px-3 py-1 bg-brand-500/10 rounded-full border border-brand-500/20">
                             <Sparkles size={14} className="text-brand-400" />
                             <span className="text-[10px] font-bold text-brand-300 uppercase tracking-widest">
-                                {telephonyActive ? `Live Call: ${currentClient.name}` : 'AI Telephony Engine'}
+                                Telephony Engine
                             </span>
                         </div>
                         {!isRecording && !isProcessing && !telephonyActive && (
@@ -209,22 +248,14 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                     </div>
 
                     <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">
-                        {completionStatus === 'success' ? 'Telephony Call Complete' :
+                        {completionStatus === 'success' ? 'Call Complete' :
                             completionStatus === 'error' ? 'Pipeline Error' :
-                                isCalling ? `Dialing ${currentClient.name}...` :
+                                isCalling ? `Dialing...` :
                                     isProcessing ? 'Processing AI Insights...' :
-                                        telephonyActive ? 'Call Connected' :
+                                        telephonyActive ? `${currentClient.name}` :
                                             isRecording ? 'Manual Capture Active' : `Call ${currentClient.name}`}
                     </h2>
-
-                    <p className="text-slate-400 text-sm mb-8 leading-relaxed px-4 max-w-sm mx-auto">
-                        {completionStatus === 'success' ? 'Call analysis complete. Score updated and insights stored in CRM.' :
-                            completionStatus === 'error' ? 'Something went wrong. Check your API configuration.' :
-                                isCalling ? 'Bridging connection to ElevenLabs outbound SIP servers...' :
-                                    isProcessing ? 'Multiplexing through ElevenLabs and Featherless AI engine...' :
-                                        (isRecording || telephonyActive) ? 'Live audio stream active. MiddleBot is extracting deal sentiment.' :
-                                            'Connect your AI Assistant directly to their real world phone number.'}
-                    </p>
+                    <div className="text-xs font-bold text-brand-400 mb-6 uppercase tracking-widest">{currentClient.phone}</div>
 
                     {(isRecording || telephonyActive) && (
                         <div className="text-5xl font-mono text-white font-black mb-10 tracking-tighter tabular-nums drop-shadow-md">
@@ -232,7 +263,7 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                         </div>
                     )}
 
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 mt-auto">
                         {completionStatus === 'success' ? (
                             <button onClick={onClose} className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-xl shadow-emerald-500/20">Done</button>
                         ) : (isProcessing || isCalling) ? (
@@ -262,13 +293,64 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                     </div>
                 </div>
 
-                <div className="bg-slate-800/50 p-4 border-t border-slate-700 flex justify-between items-center text-[8px] font-black tracking-[0.2em] text-slate-500 uppercase">
-                    <div className="flex gap-2">
-                        <span className="px-2 py-0.5 bg-slate-700 rounded border border-slate-600">ELEVENLABS TEL</span>
-                        <span className="px-2 py-0.5 bg-slate-700 rounded border border-slate-600">FEATHERLESS</span>
+                {/* Right Side: Real-time Transcript */}
+                {(telephonyActive || liveTranscript.length > 0) && (
+                    <div className="flex-1 flex flex-col bg-slate-950 min-h-[500px] border-l border-slate-800">
+                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                            <div>
+                                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                    <Sparkles size={16} className="text-blue-400" />
+                                    Live AI Transcript
+                                </h3>
+                                <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">
+                                    Powered by Featherless & OpenNote
+                                </p>
+                            </div>
+                            {liveNotes && (
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded flex items-center gap-1">
+                                        <CheckCircle2 size={12} /> Notes Synced
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                            {liveTranscript.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-4">
+                                    <Loader2 size={32} className="animate-spin text-slate-600" />
+                                    <p className="text-sm">Connecting continuous stream...</p>
+                                </div>
+                            ) : (
+                                liveTranscript.map((entry) => (
+                                    <div key={entry.id} className={`flex flex-col w-full ${entry.role === 'assistant' ? 'items-start' : 'items-end'}`}>
+                                        <div className="flex items-center gap-2 mb-1 opacity-70">
+                                            {entry.role === 'assistant' ? (
+                                                <><Bot size={14} className="text-brand-400" /><span className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">MiddleBot</span></>
+                                            ) : (
+                                                <><span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{currentClient.name}</span><UserVoice size={14} className="text-slate-400" /></>
+                                            )}
+                                        </div>
+                                        <div className={`p-4 rounded-2xl max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap shadow-lg ${entry.role === 'assistant'
+                                                ? 'bg-slate-800/80 text-white rounded-tl-sm border border-slate-700/50'
+                                                : 'bg-brand-500 text-white rounded-tr-sm'
+                                            }`}>
+                                            {entry.text}
+                                        </div>
+                                        <div className="text-[9px] text-slate-500 mt-1 font-mono">{entry.time}</div>
+                                    </div>
+                                ))
+                            )}
+                            <div ref={transcriptEndRef} />
+                        </div>
+
+                        <div className="bg-slate-900/80 p-4 border-t border-slate-800 text-[9px] uppercase tracking-[0.2em] font-black text-slate-500 flex gap-4">
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Twilio Voice</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> Featherless AI</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OpenNote CRM</span>
+                        </div>
                     </div>
-                    <span>Global Telephony Matrix</span>
-                </div>
+                )}
             </div>
         </div>
     );
