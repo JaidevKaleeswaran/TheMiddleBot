@@ -1,10 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import WidgetBox from '../ui/WidgetBox';
 import { mockClients } from '../../services/mockData';
 
 const ClientRankingBox = () => {
     return (
-        <WidgetBox title="Client Importance Ranking">
+        <WidgetBox title="Client Importance Ranking" titleHref="/dashboard/clients">
             <div className="flex text-xs font-medium text-slate-400 mb-3 px-2">
                 <div className="w-8">#</div>
                 <div className="flex-1">Client</div>
@@ -29,7 +30,11 @@ const ClientRankingBox = () => {
                     }
 
                     return (
-                        <div key={client.id} className="flex items-center gap-2 group p-2 rounded-xl hover:bg-slate-800/50 transition-colors">
+                        <Link
+                            to={`/dashboard/clients/${client.id}`}
+                            key={client.id}
+                            className="flex items-center gap-2 group p-2 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer"
+                        >
                             <div className="w-6 text-slate-500 font-medium text-sm">{index + 1}</div>
 
                             <div className="flex-1 min-w-0 flex items-center gap-3">
@@ -53,7 +58,7 @@ const ClientRankingBox = () => {
                                     {client.tier}
                                 </span>
                             </div>
-                        </div>
+                        </Link>
                     );
                 })}
             </div>

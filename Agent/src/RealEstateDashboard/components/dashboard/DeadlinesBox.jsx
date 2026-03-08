@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import WidgetBox from '../ui/WidgetBox';
 import { mockDeadlines } from '../../services/mockData';
 import { Calendar, Phone, Briefcase } from 'lucide-react';
@@ -11,7 +12,7 @@ const icons = {
 
 const DeadlinesBox = () => {
     return (
-        <WidgetBox title="Upcoming Deadlines">
+        <WidgetBox title="Upcoming Deadlines" titleHref="/dashboard/deadlines">
             <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 custom-scrollbar hide-scroll-ui">
                 {/* Progress Line */}
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-700/50 -z-10 translate-y-[-14px]"></div>
@@ -23,7 +24,11 @@ const DeadlinesBox = () => {
                             : 'bg-brand-500 text-white shadow-brand-500/50';
 
                     return (
-                        <div key={idx} className="flex flex-col items-center flex-1 min-w-[120px] group cursor-default">
+                        <Link
+                            to={`/dashboard/clients/${deadline.clientId}`}
+                            key={idx}
+                            className="flex flex-col items-center flex-1 min-w-[120px] group cursor-pointer"
+                        >
                             {/* Top Label */}
                             <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-300 transition-colors">
                                 {deadline.date}
@@ -42,7 +47,7 @@ const DeadlinesBox = () => {
                                     {deadline.text}
                                 </p>
                             </div>
-                        </div>
+                        </Link>
                     );
                 })}
             </div>

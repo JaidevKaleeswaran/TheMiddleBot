@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bot, LayoutDashboard, Users, Home, FileText, Settings, X } from 'lucide-react';
+import { Bot, LayoutDashboard, Users, Home, TrendingUp, Clock, FileText, Settings, X } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
     const navItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/', active: true },
-        { name: 'Clients', icon: Users, path: '#', active: false },
-        { name: 'Properties', icon: Home, path: '#', active: false },
-        { name: 'Notes', icon: FileText, path: '#', active: false },
-        { name: 'Settings', icon: Settings, path: '#', active: false },
+        { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+        { name: 'Clients', icon: Users, path: '/dashboard/clients' },
+        { name: 'Properties', icon: Home, path: '/dashboard/properties' },
+        { name: 'Bids', icon: TrendingUp, path: '/dashboard/bids' },
+        { name: 'Deadlines', icon: Clock, path: '/dashboard/deadlines' },
     ];
 
     return (
@@ -46,19 +46,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <NavLink
                             key={item.name}
                             to={item.path}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-200 group
-                ${item.active
+                            className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-200 group
+                                ${isActive
                                     ? 'bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
                                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 hover:pl-4'
                                 }`}
-                            title={!item.active ? "Coming soon" : ""}
                         >
-                            <item.icon size={20} className={item.active ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300'} />
-                            {item.name}
-                            {!item.active && (
-                                <span className="ml-auto text-[10px] uppercase font-bold tracking-wider text-slate-600 group-hover:text-slate-500 transition-colors">
-                                    Soon
-                                </span>
+                            {({ isActive }) => (
+                                <>
+                                    <item.icon size={20} className={isActive ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300'} />
+                                    {item.name}
+                                </>
                             )}
                         </NavLink>
                     ))}

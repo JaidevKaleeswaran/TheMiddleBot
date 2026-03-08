@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import WidgetBox from '../ui/WidgetBox';
 import { mockNotes, mockFlashcards } from '../../services/mockData';
 import { Sparkles, Edit3, ArrowRightLeft } from 'lucide-react';
@@ -43,7 +44,11 @@ const NotesFlashcardsBox = () => {
                 {activeTab === 'notes' && (
                     <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-3">
                         {mockNotes.map((note) => (
-                            <div key={note.id} className="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50 hover:bg-slate-800/80 transition-colors group">
+                            <Link
+                                to={`/dashboard/clients/${note.clientId}`}
+                                key={note.id}
+                                className="block p-3 bg-slate-800/40 rounded-xl border border-slate-700/50 hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                            >
                                 <div className="flex justify-between items-start mb-2">
                                     <span className="text-xs font-bold text-slate-300">{note.client}</span>
                                     <div className="flex items-center gap-2">
@@ -60,7 +65,7 @@ const NotesFlashcardsBox = () => {
                                     </div>
                                 </div>
                                 <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">{note.text}</p>
-                            </div>
+                            </Link>
                         ))}
 
                         <button className="w-full py-2.5 border border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-brand-500 hover:bg-brand-500/5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import WidgetBox from '../ui/WidgetBox';
 import { mockDealProbabilities } from '../../services/mockData';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Info } from 'lucide-react';
@@ -45,7 +46,15 @@ const DealProbabilityBox = () => {
                                 onClick={() => toggleRow(idx)}
                             >
                                 <div className="flex-[1.5] font-semibold text-slate-200 truncate pr-2">{deal.property}</div>
-                                <div className="flex-1 text-slate-400 truncate pr-2">{deal.client}</div>
+                                <div className="flex-1 text-slate-400 truncate pr-2">
+                                    <Link
+                                        to={`/dashboard/clients/${deal.clientId}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="hover:text-brand-400 transition-colors cursor-pointer"
+                                    >
+                                        {deal.client}
+                                    </Link>
+                                </div>
 
                                 <div className="flex-1 flex items-center justify-center gap-2">
                                     <span className="font-bold text-white w-8 text-right">{deal.probability}%</span>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import WidgetBox from '../ui/WidgetBox';
 import { mockBids, mockChartData } from '../../services/mockData';
 import { Mail, TrendingUp, AlertCircle, RefreshCcw } from 'lucide-react';
@@ -15,7 +16,7 @@ const BidsOffersBox = () => {
 
     return (
         <>
-            <WidgetBox title="Bids & Offers">
+            <WidgetBox title="Bids & Offers" titleHref="/dashboard/bids">
                 <div className="flex flex-col md:flex-row gap-4 h-full">
                     {/* Left panel - Table */}
                     <div className="flex-1 border-r border-slate-700/50 pr-4">
@@ -28,9 +29,10 @@ const BidsOffersBox = () => {
 
                         <div className="overflow-y-auto max-h-48 pr-1 custom-scrollbar space-y-1">
                             {mockBids.map(bid => (
-                                <div
+                                <Link
+                                    to={`/dashboard/clients/${bid.clientId}`}
                                     key={bid.id}
-                                    className={`flex items-center text-sm py-2 px-1 rounded hover:bg-slate-800/80 transition-colors border-l-2
+                                    className={`flex items-center text-sm py-2 px-1 rounded hover:bg-slate-800/80 transition-colors border-l-2 cursor-pointer
                     ${bid.isHighest ? 'border-brand-400 bg-brand-500/5' : 'border-transparent'}`}
                                 >
                                     <div className="flex-[1.5] flex items-center gap-1 min-w-0">
@@ -43,7 +45,11 @@ const BidsOffersBox = () => {
                                     <div className="w-8 ml-2 flex justify-end">
                                         {bid.isHighest && (
                                             <button
-                                                onClick={() => handleEmailBidders(bid.property)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleEmailBidders(bid.property);
+                                                }}
                                                 className="text-brand-400 hover:text-brand-300 transition-colors p-1"
                                                 title="Email bidders regarding new high bid"
                                             >
@@ -56,7 +62,7 @@ const BidsOffersBox = () => {
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>
