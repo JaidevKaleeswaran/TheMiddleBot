@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-const KpiCard = ({ title, value, trend, isPositive, gradientTheme }) => {
+const KpiCard = ({ title, value, trend, isPositive, gradientTheme, path }) => {
     // Map theme strings to actual tailwind gradient classes
     const themeClasses = {
         'pink-peach': 'bg-gradient-to-br from-rose-400 to-orange-300',
@@ -12,8 +13,8 @@ const KpiCard = ({ title, value, trend, isPositive, gradientTheme }) => {
 
     const gradientClass = themeClasses[gradientTheme] || 'bg-slate-800';
 
-    return (
-        <div className={`${gradientClass} rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between h-full group transition-transform hover:-translate-y-1`}>
+    const CardContent = (
+        <div className={`${gradientClass} rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between h-full group transition-transform hover:-translate-y-1 w-full`}>
             {/* Background decoration */}
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
 
@@ -34,6 +35,16 @@ const KpiCard = ({ title, value, trend, isPositive, gradientTheme }) => {
             </div>
         </div>
     );
+
+    if (path) {
+        return (
+            <Link to={path} className="block h-full">
+                {CardContent}
+            </Link>
+        );
+    }
+
+    return CardContent;
 };
 
 export default KpiCard;

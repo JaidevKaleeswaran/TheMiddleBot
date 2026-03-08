@@ -22,6 +22,7 @@ const Dashboard = () => {
                     trend={kpiData.activeClients.trend}
                     isPositive={false}
                     gradientTheme="pink-peach"
+                    path="/dashboard/clients"
                 />
                 <KpiCard
                     title="Total Listings"
@@ -29,6 +30,7 @@ const Dashboard = () => {
                     trend={kpiData.totalListings.trend}
                     isPositive={true}
                     gradientTheme="blue-teal"
+                    path="/dashboard/properties"
                 />
                 <KpiCard
                     title="Highest Open Bid"
@@ -36,6 +38,7 @@ const Dashboard = () => {
                     trend={kpiData.highestBid.trend}
                     isPositive={true}
                     gradientTheme="green-mint"
+                    path="/dashboard/bids"
                 />
                 <KpiCard
                     title="Avg Importance Score"
@@ -43,6 +46,7 @@ const Dashboard = () => {
                     trend={kpiData.avgScore.trend}
                     isPositive={true}
                     gradientTheme="violet-indigo"
+                    path="/dashboard/clients"
                 />
             </div>
 

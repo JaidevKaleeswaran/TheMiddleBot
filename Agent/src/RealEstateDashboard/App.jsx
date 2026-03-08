@@ -5,6 +5,11 @@ import { onAuthStateChanged } from 'firebase/auth';
 import AppShell from './components/layout/AppShell';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import ClientProfile from './pages/clients/ClientProfile';
+import ClientsList from './pages/lists/ClientsList';
+import PropertiesList from './pages/lists/PropertiesList';
+import BidsList from './pages/lists/BidsList';
+import DeadlinesList from './pages/lists/DeadlinesList';
 
 const ProtectedRoute = ({ children }) => {
   // Temporary bypass
@@ -25,6 +30,11 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="clients" element={<ClientsList />} />
+        <Route path="clients/:clientId" element={<ClientProfile />} />
+        <Route path="properties" element={<PropertiesList />} />
+        <Route path="bids" element={<BidsList />} />
+        <Route path="deadlines" element={<DeadlinesList />} />
       </Route>
     </Routes>
   );

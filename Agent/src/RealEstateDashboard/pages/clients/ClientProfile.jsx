@@ -1,12 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Phone, Mail, Calendar, MapPin, DollarSign, TrendingUp, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, Calendar, MapPin, DollarSign, TrendingUp, AlertCircle, Sparkles, Mic } from 'lucide-react';
 import { mockClients, mockProperties } from '../../services/mockData';
 import WidgetBox from '../../components/ui/WidgetBox';
 import KpiCard from '../../components/dashboard/KpiCard';
 
 const ClientProfile = () => {
     const { clientId } = useParams();
+    const [isCalling, setIsCalling] = useState(false);
+    const [callTime, setCallTime] = useState(0);
+
+    useEffect(() => {
+        let interval;
+        if (isCalling) {
+            interval = setInterval(() => setCallTime(prev => prev + 1), 1000);
+        } else {
+            clearInterval(interval);
+            setCallTime(0);
+        }
+        return () => clearInterval(interval);
+    }, [isCalling]);
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     // Parse to int if your mock data IDs are integers
     const client = mockClients.find(c => c.id === parseInt(clientId)) || mockClients.find(c => c.id === clientId);
 
@@ -26,12 +46,54 @@ const ClientProfile = () => {
 
     return (
         <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto animate-fade-in pb-10">
+            {/* Call Overlay */}
+            {isCalling && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-fade-in" />
+                    <div className="relative z-10 flex flex-col items-center animate-slide-up">
+                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-emerald-500 shadow-2xl mb-6 relative">
+                            <img src={client.avatar} alt={client.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-emerald-500/20 animate-pulse" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-white mb-2">Calling {client.name}...</h2>
+                        <div className="text-xl font-mono text-emerald-400 font-bold mb-12">{formatTime(callTime)}</div>
+
+                        <div className="flex gap-8">
+                            <button className="w-16 h-16 rounded-full bg-slate-800 text-white flex items-center justify-center border border-slate-700 hover:bg-slate-700 transition-colors">
+                                <Mic size={24} />
+                            </button>
+                            <button
+                                onClick={() => setIsCalling(false)}
+                                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-500/40 hover:bg-red-600 transition-all scale-110"
+                            >
+                                <Phone size={24} className="rotate-[135deg]" fill="currentColor" />
+                            </button>
+                            <button className="w-16 h-16 rounded-full bg-slate-800 text-white flex items-center justify-center border border-slate-700 hover:bg-slate-700 transition-colors">
+                                <Mail size={24} />
+                            </button>
+                        </div>
+
+                        <div className="mt-16 flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+                            <Sparkles size={16} className="text-brand-400" />
+                            <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">ElevenLabs Real-time Transcription</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header Navigation */}
             <div className="flex items-center gap-4 mb-2">
                 <Link to="/dashboard" className="p-2 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg text-slate-300 transition-colors">
                     <ArrowLeft size={20} />
                 </Link>
                 <h1 className="text-2xl font-bold text-white flex-1">{client.name}'s Profile</h1>
+
+                <button
+                    onClick={() => setIsCalling(true)}
+                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+                >
+                    <Phone size={18} fill="currentColor" /> Call Client
+                </button>
 
                 {/* Status Badge */}
                 <div className={`px-4 py-1.5 rounded-full text-sm font-bold border flex items-center gap-2 shadow-lg
