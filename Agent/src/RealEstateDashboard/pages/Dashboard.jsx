@@ -1,13 +1,13 @@
 import React from 'react';
-import KpiCard from '../../components/dashboard/KpiCard';
-import ClientRankingBox from '../../components/dashboard/ClientRankingBox';
-import ActivePropertiesBox from '../../components/dashboard/ActivePropertiesBox';
-import BidsOffersBox from '../../components/dashboard/BidsOffersBox';
-import NotesFlashcardsBox from '../../components/dashboard/NotesFlashcardsBox';
-import DeadlinesBox from '../../components/dashboard/DeadlinesBox';
-import QuickActionsBox from '../../components/dashboard/QuickActionsBox';
-import DealProbabilityBox from '../../components/dashboard/DealProbabilityBox';
-import ClientCommBox from '../../components/dashboard/ClientCommBox';
+import KpiCard from '../components/dashboard/KpiCard';
+import ClientRankingBox from '../components/dashboard/ClientRankingBox';
+import ActivePropertiesBox from '../components/dashboard/ActivePropertiesBox';
+import BidsOffersBox from '../components/dashboard/BidsOffersBox';
+import NotesFlashcardsBox from '../components/dashboard/NotesFlashcardsBox';
+import DeadlinesBox from '../components/dashboard/DeadlinesBox';
+import QuickActionsBox from '../components/dashboard/QuickActionsBox';
+import DealProbabilityBox from '../components/dashboard/DealProbabilityBox';
+import ClientCommBox from '../components/dashboard/ClientCommBox';
 
 import { kpiData } from '../services/mockData';
 
