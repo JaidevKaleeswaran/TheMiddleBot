@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, Heart, CreditCard, MessageSquare, Settings } from 'lucide-react';
+import { Home, Heart, CreditCard, Search as SearchIcon, Settings } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Wishlist from './pages/Wishlist';
 import Financials from './pages/Financials';
+import Search from './pages/Search';
 import './index.css';
 
 const SidebarItem = ({ icon: Icon, label, path }) => {
@@ -61,6 +62,7 @@ const AppShell = ({ children }) => {
         
         <nav className="flex-1 p-4 flex flex-col gap-1">
           <SidebarItem icon={Home} label="Dashboard" path="/" />
+          <SidebarItem icon={SearchIcon} label="Find Homes" path="/search" />
           <SidebarItem icon={Heart} label="Property Wishlist" path="/wishlist" />
           <SidebarItem icon={CreditCard} label="Financial Profile" path="/financials" />
         </nav>
@@ -87,6 +89,7 @@ function App() {
       <AppShell>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/financials" element={<Financials />} />
           <Route path="/settings" element={<div className="text-slate-400 p-8 text-center bg-surface-card rounded-2xl border border-white/5">Settings coming soon...</div>} />

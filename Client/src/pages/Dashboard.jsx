@@ -1,6 +1,5 @@
-import React from 'react';
 import JourneyProgressWidget from '../components/dashboard/JourneyProgressWidget';
-
+import NearbyOpenHousesWidget from '../components/dashboard/NearbyOpenHousesWidget';
 import PropertyWishlistWidget from '../components/dashboard/PropertyWishlistWidget';
 
 import FinancialProfileWidget from '../components/dashboard/FinancialProfileWidget';
@@ -16,6 +15,9 @@ export default function Dashboard() {
       
       {/* Top Hero Tracker */}
       <JourneyProgressWidget />
+
+      {/* Nearby Open Houses (Location Dependent) */}
+      <NearbyOpenHousesWidget />
 
       {/* Main Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

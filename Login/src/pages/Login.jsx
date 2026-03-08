@@ -30,10 +30,16 @@ export default function Login() {
     password: '',
   })
 
-
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const redirectByRole = (userRole) => {
+    if (userRole === 'client') {
+      window.location.href = 'http://localhost:5175/'
+    } else {
+      window.location.href = 'http://localhost:5174/dashboard'
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -41,16 +47,16 @@ export default function Login() {
     setLoading(true)
     
     // Bypassing authentication entirely as requested
-    console.log("Bypassing auth, redirecting to Agent App (5174)");
-    window.location.href = 'http://localhost:5174/'
+    console.log(`Bypassing auth, redirecting to ${role} app`);
+    redirectByRole(role)
   }
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
     
     // Bypassing authentication entirely as requested
-    console.log("Bypassing auth, redirecting to Agent App (5174)");
-    window.location.href = 'http://localhost:5174/'
+    console.log(`Bypassing auth, redirecting to ${role} app`);
+    redirectByRole(role)
   }
 
   return (
