@@ -13,9 +13,9 @@ const icons = {
 const DeadlinesBox = () => {
     return (
         <WidgetBox title="Upcoming Deadlines" titleHref="/dashboard/deadlines">
-            <div className="flex items-center justify-between gap-4 overflow-x-auto pb-4 custom-scrollbar hide-scroll-ui relative">
+            <div className="flex items-center justify-between gap-4 overflow-x-auto pb-10 pt-2 custom-scrollbar relative">
                 {/* Progress Line */}
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-700/50 -z-10 translate-y-[-14px]"></div>
+                <div className="absolute top-[48px] left-0 right-0 h-0.5 bg-slate-700/50 -z-10"></div>
 
                 {mockDeadlines.map((deadline, idx) => {
                     const IconComponent = icons[deadline.type] || Calendar;

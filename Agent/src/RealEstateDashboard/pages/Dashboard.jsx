@@ -82,20 +82,20 @@ const Dashboard = () => {
 
             {/* Middle Row: Client Ranking & Active Properties */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
-                <div className="h-[400px]">
+                <div className="min-h-[400px]">
                     <ClientRankingBox />
                 </div>
-                <div className="h-[400px]">
+                <div className="min-h-[400px]">
                     <ActivePropertiesBox />
                 </div>
             </div>
 
             {/* Lower Row: Bids & Notes */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
-                <div className="h-[350px]">
+                <div className="min-h-[350px]">
                     <BidsOffersBox />
                 </div>
-                <div className="h-[350px]">
+                <div className="min-h-[350px]">
                     <NotesFlashcardsBox />
                 </div>
             </div>
@@ -105,8 +105,8 @@ const Dashboard = () => {
                 <div className="lg:col-span-6 min-h-[400px]">
                     <DealProbabilityBox />
                 </div>
-                <div className="lg:col-span-6 flex flex-col gap-6 h-full">
-                    <div className="min-h-[250px] flex-1">
+                <div className="lg:col-span-6 flex flex-col gap-6">
+                    <div className="min-h-[250px]">
                         <DeadlinesBox />
                     </div>
                     <div className="min-h-[120px]">

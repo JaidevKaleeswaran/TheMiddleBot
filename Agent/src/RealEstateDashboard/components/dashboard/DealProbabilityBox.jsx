@@ -34,7 +34,7 @@ const DealProbabilityBox = () => {
                 <div className="w-8 ml-2"></div>
             </div>
 
-            <div className="overflow-y-auto max-h-56 pr-1 custom-scrollbar space-y-2">
+            <div className="overflow-y-auto pr-1 custom-scrollbar space-y-2 pb-6">
                 {mockDealProbabilities.map((deal, idx) => {
                     const isExpanded = expandedRow === idx;
                     const { bgClass, textClass, fillClass } = getUrgencyClasses(deal.probability);

@@ -3,8 +3,14 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
+
+// Request Logger
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
+});
 
 const ELEVENLABS_API_KEY = process.env.VITE_ELEVENLABS_API_KEY;
 
@@ -47,7 +53,7 @@ app.post('/api/call', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
     console.log(`Telephony Engine running on http://localhost:${PORT}`);
 });

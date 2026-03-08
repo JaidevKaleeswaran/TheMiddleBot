@@ -39,10 +39,10 @@ const NotesFlashcardsBox = () => {
                 </button>
             </div>
 
-            <div className="flex-1 relative">
+            <div className="relative">
                 {/* Notes View */}
                 {activeTab === 'notes' && (
-                    <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-3">
+                    <div className="space-y-3 pb-4">
                         {mockNotes.map((note) => (
                             <Link
                                 to={`/dashboard/clients/${note.clientId}`}
@@ -76,7 +76,7 @@ const NotesFlashcardsBox = () => {
 
                 {/* Flashcards View */}
                 {activeTab === 'flashcards' && (
-                    <div className="h-full flex flex-col items-center justify-center pb-6">
+                    <div className="flex flex-col items-center justify-center pb-8">
                         <div className="w-full max-w-sm perspective-1000">
                             <div
                                 className={`relative w-full h-40 transition-transform duration-500 transform-style-3d cursor-pointer ${isFlipped ? 'rotate-y-180' : ''}`}

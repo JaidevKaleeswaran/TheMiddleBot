@@ -67,7 +67,7 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
 
         try {
             // Initiate the phone call via the local backend router
-            const res = await fetch('http://localhost:3001/api/call', {
+            const res = await fetch('http://localhost:3005/api/call', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -90,7 +90,7 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
 
         } catch (error) {
             console.error("Failed to start phone call:", error);
-            alert("Failed to dialout. Make sure the Node application is running on port 3001.");
+            alert(`Failed to dialout: ${error.message}\n\nMake sure the Telephony Engine is running on port 3005.`);
             setIsCalling(false);
         }
     };
