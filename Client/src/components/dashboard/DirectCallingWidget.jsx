@@ -1,17 +1,33 @@
 import React from 'react';
 import { Phone, MessageCircle, Video, User, Bot } from 'lucide-react';
 
-const ContactOption = ({ icon: Icon, label, sublabel, colorClass }) => (
-  <button className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.07] transition-all text-left w-full group">
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
-      <Icon size={20} />
-    </div>
-    <div className="flex-1">
-      <h4 className="text-sm font-bold text-white group-hover:text-brand-400 transition-colors">{label}</h4>
-      <p className="text-[11px] text-slate-400">{sublabel}</p>
-    </div>
-  </button>
-);
+const ContactOption = ({ icon: Icon, label, sublabel, colorClass, telLink }) => {
+  if (telLink) {
+    return (
+      <a href={`tel:${telLink}`} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.07] transition-all text-left w-full group">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
+          <Icon size={20} />
+        </div>
+        <div className="flex-1">
+          <h4 className="text-sm font-bold text-white group-hover:text-brand-400 transition-colors">{label}</h4>
+          <p className="text-[11px] text-slate-400">{sublabel}</p>
+        </div>
+      </a>
+    );
+  }
+
+  return (
+    <button className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.07] transition-all text-left w-full group">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
+        <Icon size={20} />
+      </div>
+      <div className="flex-1">
+        <h4 className="text-sm font-bold text-white group-hover:text-brand-400 transition-colors">{label}</h4>
+        <p className="text-[11px] text-slate-400">{sublabel}</p>
+      </div>
+    </button>
+  );
+};
 
 export default function DirectCallingWidget() {
   return (
@@ -30,6 +46,7 @@ export default function DirectCallingWidget() {
           label="Call Primary Realtor" 
           sublabel="Jaidev Kaleeswaran (Agent)" 
           colorClass="bg-brand-500/20 text-brand-400" 
+          telLink="+14432418983"
         />
         <ContactOption 
           icon={Bot} 

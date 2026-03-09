@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { processAIPipeline } from '../../services/aiPipeline';
-import { mockClients } from '../../services/mockData';
-import { Phone, Mic, Square, Sparkles, X, Loader2, CheckCircle2, PhoneCall, User, Bot, UserVoice } from 'lucide-react';
+import { mockClients, updateClientAIResult } from '../../services/mockData';
+import { Phone, Mic, Square, Sparkles, X, Loader2, CheckCircle2, PhoneCall, User, Bot } from 'lucide-react';
 
 const ELEVENLABS_AGENT_ID = import.meta.env.VITE_ELEVENLABS_AGENT_ID;
 
@@ -57,6 +57,9 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                     }]);
                 } else if (data.type === 'note_created') {
                     setLiveNotes(true); // Indicate notes were synced
+                } else if (data.type === 'widget_update') {
+                    // Instantly push AI metrics to dashboard 
+                    updateClientAIResult(selectedClientId, data.data, null);
                 } else if (data.type === 'call_ended') {
                     setTelephonyActive(false);
                     setCompletionStatus('success');
@@ -328,7 +331,7 @@ const RecordCallModal = ({ isOpen, onClose, clientId = null }) => {
                                             {entry.role === 'assistant' ? (
                                                 <><Bot size={14} className="text-brand-400" /><span className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">MiddleBot</span></>
                                             ) : (
-                                                <><span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{currentClient.name}</span><UserVoice size={14} className="text-slate-400" /></>
+                                                <><span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{currentClient.name}</span><User size={14} className="text-slate-400" /></>
                                             )}
                                         </div>
                                         <div className={`p-4 rounded-2xl max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap shadow-lg ${entry.role === 'assistant'
