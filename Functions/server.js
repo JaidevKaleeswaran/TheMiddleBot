@@ -1,4 +1,6 @@
 const express = require('express');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const FormData = require('form-data');
 const cors = require('cors');
 const http = require('http');
 const twilio = require('twilio');
@@ -24,18 +26,12 @@ app.use((req, res, next) => {
 });
 
 // --- Configuration ---
-const ELEVENLABS_API_KEY = process.env.VITE_ELEVENLABS_API_KEY;
-const FEATHERLESS_API_KEY = process.env.VITE_FEATHERLESS_API_KEY;
-const OPENNOTE_API_KEY = process.env.VITE_OPENNOTE_API_KEY;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 const PORT = process.env.PORT || 3005;
 
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-
-// Voice ID for ElevenLabs
-const ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; // Rachel
 
 // --- In-memory store for active calls & live transcript ---
 const activeCalls = {};
@@ -60,111 +56,82 @@ function broadcastToAgentDashboard(event) {
     }
 }
 
-// --- ElevenLabs TTS ---
-// Generates audio and returns the filename
-async function generateElevenLabsAudio(text) {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}?output_format=mp3_44100_128`, {
-        method: 'POST',
-        headers: {
-            'xi-api-key': ELEVENLABS_API_KEY,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            text,
-            model_id: 'eleven_turbo_v2_5', // Fastest model
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`ElevenLabs TTS failed: ${await response.text()}`);
-    }
-
-    const buffer = await response.arrayBuffer();
-    const filename = `${uuidv4()}.mp3`;
-    const filepath = path.join(audioDir, filename);
-    fs.writeFileSync(filepath, Buffer.from(buffer));
-
-    // Auto-cleanup after 5 minutes
-    setTimeout(() => fs.unlinkSync(filepath), 5 * 60 * 1000);
-
-    return filename;
-}
-
-// --- Featherless AI ---
+// --- FREE Smart Routing (No AI APIs Needed) ---
 async function generateAIResponse(clientName, clientTier, conversationHistory, userInput) {
-    const systemPrompt = `You are TheMiddleBot, an AI real estate assistant calling on behalf of Jaidev Kaleeswaran, a top-tier Bay Area real estate agent.
-You are on the phone with ${clientName} (Priority: ${clientTier}).
+    const text = userInput.toLowerCase();
+    
+    let replyText = "I see. Let me have Jaidev follow up with you on that.";
+    let widgetData = null;
 
-RULES:
-- Keep responses to 1-2 SHORT sentences. You are on a phone call.
-- Sound natural, warm, and professional.
-- Use casual filler like "Gotcha", "Perfect", "Sounds good".
-- Ask ONE question at a time.
-- If they ask something you can't answer, say "Great question — I'll have Jaidev follow up with you on that directly."
-
-CALL FLOW:
-1. Ask if they're still actively looking to buy/sell in the Bay Area
-2. Ask about their timeline (30, 60, or 90 days)
-3. Ask about preferred neighborhoods
-4. Ask about budget range
-5. Ask if there's anything specific for Jaidev to follow up on
-6. Thank them and end
-
-IMPORTANT: 
-- ALWAYS remind them they can press: 1 for viewings, 2 for pricing, 3 for Jaidev, 4 for email listings, 5 to end call, or 0 for options again.`;
-
-    const messages = [
-        { role: 'system', content: systemPrompt },
-        ...conversationHistory.map(h => ({ role: h.role, content: h.text })),
-        { role: 'user', content: userInput }
-    ];
-
-    try {
-        const response = await fetch('https://api.featherless.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${FEATHERLESS_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
-                messages,
-                max_tokens: 150,
-                temperature: 0.7
-            })
-        });
-
-        if (!response.ok) throw new Error(await response.text());
-        const data = await response.json();
-        return data.choices?.[0]?.message?.content?.trim() || "Let me make a note of that for Jaidev.";
-    } catch (error) {
-        console.error('[Featherless] Error:', error.message);
-        return "I appreciate your patience. Jaidev will follow up with you directly.";
+    if (text.includes("pressed 1") || text.includes("viewing") || text.includes("see")) {
+        const bodies = [
+            "Wonderful! I can definitely help schedule a property viewing. What days of the week usually work best for you?",
+            "Great choice! Let's get a viewing on the calendar. Which days do you have some free time?",
+            "Perfect. I'd love to set up a tour for you. Any preference on day or time?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+    } else if (text.includes("pressed 2") || text.includes("price") || text.includes("budget") || text.includes("cost")) {
+        const bodies = [
+            "Absolutely. What's your general budget so we look at the right properties?",
+            "Got it. To make sure we're looking at the right properties, could you give me a ballpark figure for your budget?",
+            "Okay! How much are you looking to spend?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+    } else if (text.includes("pressed 3") || text.includes("jaidev") || text.includes("speak")) {
+        const bodies = [
+            "Sure thing! I'll make sure Jaidev reaches out to you directly. Is there a specific time that works best for a call?",
+            "Understood. I will tell Jaidev to call you. When are you usually free?",
+            "Certainly. Jaidev would be happy to speak with you. What time works best?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+    } else if (text.includes("pressed 4") || text.includes("email") || text.includes("listings")) {
+        const bodies = [
+            "Great idea! We can set up those email alerts. What type of property are you most interested in?",
+            "You got it. I'll get those listings to your inbox. What kind of properties catch your eye?",
+            "Listing alerts are a great way to stay updated. Are you looking for homes, condos, or something else?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+    } else if (text.includes("pressed 0") || text.includes("repeat") || text.includes("options")) {
+        return { replyText: "You can press 1 to schedule a viewing, 2 for pricing, 3 to speak with Jaidev, 4 for email listings, or 5 to hang up. Or simply tell me what you need!", widgetData: null };
+    } else if (text.includes("monday") || text.includes("tuesday") || text.includes("wednesday") || text.includes("thursday") || text.includes("friday") || text.includes("weekend") || text.includes("day") || text.includes("tomorrow")) {
+        const bodies = [
+            "Perfect, I've noted that down. Is there anything else I can assist with today?",
+            "Awesome, that's on the schedule. Anything else on your mind?",
+            "Consider it locked in! What else can we help you with?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+        widgetData = { importanceScore: 85, tier: "Warm", actionPlan: ["Follow up on viewing", "Send calendar invite", "Confirm property"] };
+    } else if (text.includes("million") || text.includes("thousand") || text.includes("k") || /\d/.test(text)) {
+        const bodies = [
+            "Got it, that gives us a great starting point! Jaidev will send you options in that range soon.",
+            "Perfect, that's very helpful to know. We'll start putting together some options for you.",
+            "Understood! We'll make sure the properties match that range."
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+        widgetData = { importanceScore: 90, tier: "Hot", actionPlan: ["Send listings in budget", "Call to discuss financing", "Set up portal"] };
+    } else if (text.includes("home") || text.includes("condo") || text.includes("house") || text.includes("apartment")) {
+        const bodies = [
+            "I've updated your preferences. Anything else?",
+            "Excellent choice. Was there anything else you wanted to add?",
+            "I'll add that to your file. Anything else?"
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
+        widgetData = { importanceScore: 70, tier: "Warm", actionPlan: ["Send matching listings", "Follow up call"] };
+    } else {
+        const bodies = [
+            "Thanks for letting me know. I'll pass that along to Jaidev so he can assist you further.",
+            "Understood. I will make sure Jaidev gets this information.",
+            "I appreciate it. Jaidev will review this shortly."
+        ];
+        replyText = bodies[Math.floor(Math.random() * bodies.length)];
     }
+
+    return { replyText, widgetData };
 }
 
 // --- OpenNote ---
 async function createOpenNote(clientName, transcript) {
-    try {
-        const noteText = transcript.map(t => `${t.role === 'assistant' ? 'MiddleBot' : clientName}: ${t.text}`).join('\n');
-        const response = await fetch('https://api.opennote.me/v1/notes', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENNOTE_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title: `Call with ${clientName} — ${new Date().toLocaleDateString()}`,
-                content: noteText,
-                tags: ['ai-call', clientName.toLowerCase().replace(/\s/g, '-')]
-            })
-        });
-        if (response.ok) console.log(`[OpenNote] Note created for ${clientName}`);
-    } catch (error) {
-        console.log(`[OpenNote] Failed to save note for ${clientName}`);
-    }
-
+    console.log(`[OpenNote Disabled] Mock Note created for ${clientName}`);
     broadcastToAgentDashboard({
         type: 'note_created',
         clientName,
@@ -185,10 +152,10 @@ app.post('/api/call', async (req, res) => {
         const call = await twilioClient.calls.create({
             from: TWILIO_PHONE_NUMBER,
             to: phoneNumber,
+            machineDetection: 'DetectMessageEnd',
             url: `https://${serverHost}/twiml/greeting?clientName=${safeName}&clientTier=${safeTier}`,
             statusCallback: `https://${serverHost}/twiml/status`,
-            statusCallbackEvent: ['completed'],
-            record: true
+            statusCallbackEvent: ['completed']
         });
 
         activeCalls[call.sid] = {
@@ -206,126 +173,171 @@ app.post('/api/call', async (req, res) => {
     }
 });
 
-// --- TwiML: Initial greeting ---
-app.post('/twiml/greeting', async (req, res) => {
-    const clientName = decodeURIComponent(req.query.clientName || 'there');
-    const clientTier = decodeURIComponent(req.query.clientTier || 'Unknown');
+// --- Inbound Twilio Webhook Handle ---
+app.post('/api/incoming-call', async (req, res) => {
+    const callerNumber = req.body.From;
+    console.log(`[INBOUND] Ringing from: ${callerNumber}`);
+
+    const mockDatabaseParams = { name: 'Guest Client', tier: 'New Lead' };
+    if (callerNumber === '+15105571410') {
+        mockDatabaseParams.name = 'Johini Eirana';
+        mockDatabaseParams.tier = 'Critical';
+    } else if (callerNumber === '+16284453201') {
+        mockDatabaseParams.name = 'Barara Fuders';
+        mockDatabaseParams.tier = 'High';
+    }
+
+    const safeName = encodeURIComponent(mockDatabaseParams.name);
+    const safeTier = encodeURIComponent(mockDatabaseParams.tier);
+    const serverHost = process.env.SERVER_HOST;
     const callSid = req.body.CallSid;
 
-    const initialPrompt = `This is the start of the call. Greet ${clientName} warmly, introduce yourself as MiddleBot calling on behalf of Jaidev Kaleeswaran's real estate team, and ask how they're doing. Then list the keypad options: Press 1 to schedule a viewing, 2 to discuss pricing, 3 to speak with Jaidev, 4 for email listings, 5 to end call, 0 to hear options again.`;
+    activeCalls[callSid] = {
+        clientName: mockDatabaseParams.name,
+        clientTier: mockDatabaseParams.tier,
+        history: [],
+        startTime: Date.now()
+    };
 
-    // Generate text via Featherless
-    const aiText = await generateAIResponse(clientName, clientTier, [], initialPrompt);
-
-    if (activeCalls[callSid]) {
-        activeCalls[callSid].history.push({ role: 'assistant', text: aiText });
-    }
-    broadcastToAgentDashboard({ type: 'agent_speaking', text: aiText, timestamp: new Date().toISOString() });
-
-    // Generate Audio via ElevenLabs
-    let audioFile;
-    try {
-        audioFile = await generateElevenLabsAudio(aiText);
-    } catch (e) {
-        console.error('TTS Error:', e);
-        audioFile = null;
-    }
+    broadcastToAgentDashboard({ type: 'call_started', callSid: callSid });
 
     const twiml = new twilio.twiml.VoiceResponse();
-    const gather = twiml.gather({
-        input: 'dtmf speech',
-        timeout: 10,
-        speechTimeout: 'auto',
-        action: `/twiml/respond?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`,
-        method: 'POST'
-    });
-
-    if (audioFile) {
-        gather.play(`https://${process.env.SERVER_HOST}/audio/${audioFile}`);
-    } else {
-        gather.say({ voice: 'Google.en-US-Neural2-J' }, aiText); // Fallback
-    }
-
-    twiml.redirect(`/twiml/noinput?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`);
+    twiml.redirect(`https://${serverHost}/twiml/greeting?clientName=${safeName}&clientTier=${safeTier}`);
 
     res.type('text/xml');
     res.send(twiml.toString());
 });
 
-// --- TwiML: Handle user response ---
-app.post('/twiml/respond', async (req, res) => {
+// --- TwiML: Initial greeting ---
+app.post('/twiml/greeting', async (req, res) => {
     const clientName = decodeURIComponent(req.query.clientName || 'there');
     const clientTier = decodeURIComponent(req.query.clientTier || 'Unknown');
-    const callSid = req.body.CallSid;
-    const speechResult = req.body.SpeechResult;
-    const digits = req.body.Digits;
+    const callSid = req.body?.CallSid || "unknown";
 
-    let userInput = '';
-
-    if (digits) {
-        const dtmfMap = {
-            '1': `I pressed 1 — I want to schedule a property viewing.`,
-            '2': `I pressed 2 — I want to discuss pricing and budget.`,
-            '3': `I pressed 3 — I want to speak with Jaidev directly.`,
-            '4': `I pressed 4 — I want to receive property listings via email.`,
-            '5': `I pressed 5 — I want to end the call.`,
-            '0': `I pressed 0 — Please repeat the menu options.`
-        };
-        userInput = dtmfMap[digits] || `I pressed ${digits}.`;
-    } else if (speechResult) {
-        userInput = speechResult;
-    } else {
-        userInput = "I didn't say anything, please continue.";
-    }
-
-    if (activeCalls[callSid]) {
-        activeCalls[callSid].history.push({ role: 'user', text: userInput });
-        createOpenNote(clientName, activeCalls[callSid].history);
-    }
-
-    broadcastToAgentDashboard({ type: 'user_speaking', text: userInput, timestamp: new Date().toISOString() });
-
-    // Handle hangup if DTMF 5 or "goodbye"
-    if (digits === '5' || (speechResult && speechResult.toLowerCase().includes('goodbye'))) {
-        const farewell = `Thank you so much for your time, ${clientName}! Jaidev will follow up with you personally. Have a wonderful day!`;
-
-        if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: farewell });
-        broadcastToAgentDashboard({ type: 'call_ending', text: farewell, timestamp: new Date().toISOString() });
-
-        const twiml = new twilio.twiml.VoiceResponse();
-        try {
-            const audioFile = await generateElevenLabsAudio(farewell);
-            twiml.play(`https://${process.env.SERVER_HOST}/audio/${audioFile}`);
-        } catch (e) {
-            twiml.say(farewell);
-        }
-        twiml.hangup();
-        res.type('text/xml');
-        return res.send(twiml.toString());
-    }
-
-    // Generate AI response
-    const history = activeCalls[callSid]?.history || [];
-    const aiText = await generateAIResponse(clientName, clientTier, history, userInput);
+    const aiText = `Hello ${clientName}! This is MiddleBot calling on behalf of Jaidev's real estate team. How are you today? Press 1 to schedule a viewing, 2 to discuss pricing, 3 to speak with Jaidev, 4 for email listings, or 5 to end call.`;
 
     if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: aiText });
     broadcastToAgentDashboard({ type: 'agent_speaking', text: aiText, timestamp: new Date().toISOString() });
 
     const twiml = new twilio.twiml.VoiceResponse();
     const gather = twiml.gather({
-        input: 'dtmf speech',
+        input: 'dtmf',
+        numDigits: 1,
         timeout: 10,
         action: `/twiml/respond?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`,
         method: 'POST'
     });
 
-    try {
-        const audioFile = await generateElevenLabsAudio(aiText);
-        gather.play(`https://${process.env.SERVER_HOST}/audio/${audioFile}`);
-    } catch (e) {
-        gather.say({ voice: 'Google.en-US-Neural2-J' }, aiText); // Fallback
+    gather.say({ voice: 'Google.en-US-Neural2-F' }, aiText);
+    
+    twiml.redirect(`/twiml/noinput?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`);
+    res.type('text/xml');
+    res.send(twiml.toString());
+});
+
+// --- TwiML: Handle user numerical menu response ---
+app.post('/twiml/respond', async (req, res) => {
+    const clientName = decodeURIComponent(req.query.clientName || 'there');
+    const clientTier = decodeURIComponent(req.query.clientTier || 'Unknown');
+    const callSid = req.body?.CallSid || "unknown";
+    const digits = req.body?.Digits;
+
+    let userInput = digits ? ({
+        '1': `I pressed 1 — I want to schedule a property viewing.`,
+        '2': `I pressed 2 — I want to discuss pricing and budget.`,
+        '3': `I pressed 3 — I want to speak with Jaidev directly.`,
+        '4': `I pressed 4 — I want to receive property listings via email.`,
+        '5': `I pressed 5 — I want to end the call.`,
+        '0': `I pressed 0 — Please repeat the menu options.`
+    }[digits] || `I pressed ${digits}.`) : "I didn't press anything. Can you go ahead?";
+
+    if (activeCalls[callSid]) {
+        activeCalls[callSid].history.push({ role: 'user', text: userInput });
+        createOpenNote(clientName, activeCalls[callSid].history);
+    }
+    broadcastToAgentDashboard({ type: 'user_speaking', text: userInput, timestamp: new Date().toISOString() });
+
+    if (digits === '5') {
+        const farewell = `Thank you so much for your time, ${clientName}! Jaidev will follow up with you personally. Have a wonderful day!`;
+        if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: farewell });
+        broadcastToAgentDashboard({ type: 'call_ending', text: farewell, timestamp: new Date().toISOString() });
+        const twiml = new twilio.twiml.VoiceResponse();
+        twiml.say({ voice: 'Google.en-US-Neural2-F' }, farewell);
+        twiml.hangup();
+        return res.type('text/xml').send(twiml.toString());
     }
 
+    const history = activeCalls[callSid]?.history || [];
+    const aiResult = await generateAIResponse(clientName, clientTier, history, userInput);
+    const aiText = aiResult.replyText || "Okay, let's continue.";
+
+    if (aiResult.widgetData) {
+        broadcastToAgentDashboard({ type: 'widget_update', data: aiResult.widgetData, clientName });
+    }
+
+    if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: aiText });
+    broadcastToAgentDashboard({ type: 'agent_speaking', text: aiText, timestamp: new Date().toISOString() });
+
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say({ voice: 'Google.en-US-Neural2-F' }, aiText);
+
+    twiml.gather({
+        input: 'speech',
+        action: `/twiml/handle-recording?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`,
+        timeout: 5,
+        speechTimeout: 'auto'
+    });
+    twiml.redirect(`/twiml/noinput?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`);
+
+    res.type('text/xml');
+    res.send(twiml.toString());
+});
+
+// --- TwiML: Handle audio recording of user speech ---
+app.post('/twiml/handle-recording', async (req, res) => {
+    const clientName = decodeURIComponent(req.query.clientName || 'there');
+    const clientTier = decodeURIComponent(req.query.clientTier || 'Unknown');
+    const callSid = req.body?.CallSid || "unknown";
+    
+    // Twilio sends SpeechResult when using Gather input="speech"
+    let transcript = req.body?.SpeechResult || req.body?.Digits || "I'm not sure what you said.";
+
+    if (activeCalls[callSid]) {
+        activeCalls[callSid].history.push({ role: 'user', text: transcript });
+        createOpenNote(clientName, activeCalls[callSid].history);
+    }
+    broadcastToAgentDashboard({ type: 'user_speaking', text: transcript, timestamp: new Date().toISOString() });
+
+    if (transcript.toLowerCase().includes('goodbye') || transcript.toLowerCase().includes('hang up')) {
+        const twiml = new twilio.twiml.VoiceResponse();
+        const farewell = `Thank you so much for your time, ${clientName}! Jaidev will follow up with you personally. Have a wonderful day!`;
+        if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: farewell });
+        broadcastToAgentDashboard({ type: 'call_ending', text: farewell, timestamp: new Date().toISOString() });
+        twiml.say({ voice: 'Google.en-US-Neural2-F' }, farewell);
+        twiml.hangup();
+        return res.type('text/xml').send(twiml.toString());
+    }
+
+    const history = activeCalls[callSid]?.history || [];
+    const aiResult = await generateAIResponse(clientName, clientTier, history, transcript);
+    const aiText = aiResult.replyText || "I'm sorry, I didn't quite catch that.";
+
+    if (aiResult.widgetData) {
+        broadcastToAgentDashboard({ type: 'widget_update', data: aiResult.widgetData, clientName });
+    }
+
+    if (activeCalls[callSid]) activeCalls[callSid].history.push({ role: 'assistant', text: aiText });
+    broadcastToAgentDashboard({ type: 'agent_speaking', text: aiText, timestamp: new Date().toISOString() });
+
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say({ voice: 'Google.en-US-Neural2-F' }, aiText);
+
+    twiml.gather({
+        input: 'speech',
+        action: `/twiml/handle-recording?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`,
+        timeout: 5,
+        speechTimeout: 'auto'
+    });
     twiml.redirect(`/twiml/noinput?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`);
 
     res.type('text/xml');
@@ -334,20 +346,19 @@ app.post('/twiml/respond', async (req, res) => {
 
 // --- TwiML: No input handler ---
 app.post('/twiml/noinput', async (req, res) => {
+    const clientName = decodeURIComponent(req.query.clientName || 'there');
+    const clientTier = decodeURIComponent(req.query.clientTier || 'Unknown');
     const twiml = new twilio.twiml.VoiceResponse();
     const gather = twiml.gather({
-        input: 'dtmf speech',
-        timeout: 15,
-        action: `/twiml/respond?clientName=${req.query.clientName}&clientTier=${req.query.clientTier}`,
+        input: 'dtmf',
+        numDigits: 1,
+        timeout: 10,
+        action: `/twiml/respond?clientName=${encodeURIComponent(clientName)}&clientTier=${encodeURIComponent(clientTier)}`,
         method: 'POST'
     });
-
-    // Use fast fallback TTS for re-prompts to save ElevenLabs credits
-    gather.say({ voice: 'Google.en-US-Neural2-J' }, `Are you still there? You can press 1 for viewings, 2 for pricing, 3 for Jaidev, 4 for email, 5 to hang up.`);
-
-    twiml.say({ voice: 'Google.en-US-Neural2-J' }, `It seems like now might not be the best time. Have a great day!`);
+    gather.say({ voice: 'Google.en-US-Neural2-F' }, `Are you still there? You can press 1 for viewings, 2 for pricing, 3 for Jaidev, 4 for email, 5 to hang up.`);
+    twiml.say({ voice: 'Google.en-US-Neural2-F' }, `It seems like now might not be the best time. Have a great day!`);
     twiml.hangup();
-
     res.type('text/xml');
     res.send(twiml.toString());
 });

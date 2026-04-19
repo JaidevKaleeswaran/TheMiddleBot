@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Home,
@@ -14,9 +14,13 @@ import {
 } from 'lucide-react';
 import WidgetBox from '../../components/ui/WidgetBox';
 import KpiCard from '../../components/dashboard/KpiCard';
+import MessagingModal from '../../components/shared/MessagingModal';
 import { mockProperties, mockBids, mockDeadlines } from '../../services/mockData';
 
 const ClientDashboard = () => {
+    const [isMessageOpen, setIsMessageOpen] = useState(false);
+    const [showContract, setShowContract] = useState(false);
+
     // For the demo, we assume the logged in client is Johini (ID: 1)
     const myBid = mockBids.find(b => b.clientId === 1);
     const myProperty = mockProperties.find(p => p.address === myBid?.property);
@@ -46,7 +50,7 @@ const ClientDashboard = () => {
                         <p className="text-xs text-slate-400 font-bold uppercase">Assigned Agent</p>
                         <p className="text-sm font-bold text-white">David Grey H.</p>
                     </div>
-                    <button className="ml-4 p-2.5 bg-brand-500 hover:bg-brand-400 text-white rounded-xl transition-all">
+                    <button onClick={() => setIsMessageOpen(true)} className="ml-4 p-2.5 bg-brand-500 hover:bg-brand-400 text-white rounded-xl transition-all shadow-lg hover:shadow-brand-500/20 active:scale-95">
                         <MessageSquare size={18} />
                     </button>
                 </div>
@@ -114,7 +118,7 @@ const ClientDashboard = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <button className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold transition-all border border-slate-700 flex items-center justify-center gap-2">
+                                <button onClick={() => setShowContract(true)} className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold transition-all border border-slate-700 flex items-center justify-center gap-2 active:scale-95 hover:shadow-xl">
                                     <FileText size={18} /> View Contract Details
                                 </button>
                             </div>
@@ -185,7 +189,7 @@ const ClientDashboard = () => {
                             <p className="text-white/80 text-sm leading-relaxed mb-8">
                                 You are leading the bids on your dream home. We'll notify you the moment the seller signs.
                             </p>
-                            <button className="mt-auto w-full py-4 bg-white text-brand-600 rounded-2xl font-bold shadow-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => alert("Awesome! Agent David has been notified and will reach out to confirm celebration details.")} className="mt-auto w-full py-4 bg-white text-brand-600 rounded-2xl font-bold shadow-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-95">
                                 <Calendar size={18} /> Schedule Celebration
                             </button>
                         </div>
@@ -195,6 +199,54 @@ const ClientDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            <MessagingModal isOpen={isMessageOpen} onClose={() => setIsMessageOpen(false)} clientId={1} />
+            
+            {/* Contract Modal Overlay */}
+            {showContract && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-fade-in" onClick={() => setShowContract(false)} />
+                    <div className="relative z-10 w-full max-w-3xl bg-white rounded-sm shadow-2xl overflow-hidden animate-slide-up flex flex-col h-[85vh]">
+                        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100">
+                            <h2 className="text-lg font-bold text-slate-800">Secure Document Viewer</h2>
+                            <button onClick={() => setShowContract(false)} className="text-slate-500 hover:text-slate-800 font-bold px-3 py-1 border border-slate-300 rounded hover:bg-slate-200 transition-colors">Close</button>
+                        </div>
+                        <div className="flex-1 p-8 md:p-12 overflow-y-auto bg-[#faf9f6] text-slate-800 space-y-6 flex flex-col">
+                            <div className="border-b-4 border-slate-900 pb-4 mb-4 text-center">
+                                <h1 className="text-2xl md:text-4xl font-serif uppercase tracking-widest text-slate-900">Residential Purchase Agreement</h1>
+                                <p className="text-slate-500 font-medium mt-2">CONFIDENTIAL • BINDING DOCUMENT</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-8 text-sm md:text-base font-serif">
+                                <div>
+                                    <p className="text-slate-500 mb-1 font-sans text-xs uppercase tracking-wider">Date Prepared</p>
+                                    <p className="font-medium">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric'})}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-slate-500 mb-1 font-sans text-xs uppercase tracking-wider">Property Address</p>
+                                    <p className="font-medium">{myProperty?.address}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4 font-serif text-sm md:text-base leading-relaxed mt-6">
+                                <p><strong>1. PARTIES:</strong> This Agreement is made between <span className="font-bold border-b border-slate-400">Johini Eirana</span> ("Buyer") and <span className="font-bold border-b border-slate-400">Estate Holdings LLC</span> ("Seller").</p>
+                                <p><strong>2. PURCHASE PRICE:</strong> The total purchase price to be paid by Buyer is <span className="font-bold">${myBid?.amount.toLocaleString()}</span>.</p>
+                                <p><strong>3. CLOSING:</strong> The closing of the sale shall take place within 30 days of the mutual acceptance of this contract.</p>
+                                <p><strong>4. CONTINGENCIES:</strong> This offer is contingent upon a satisfactory inspection and approval of financing by the Buyer's lending institution.</p>
+                            </div>
+                            
+                            <div className="mt-auto pt-16 grid grid-cols-2 gap-8 font-serif">
+                                <div>
+                                    <div className="w-full border-b border-slate-800 mb-2"><span className="font-cursive text-2xl text-blue-800 italic pr-4">Johini Eirana</span></div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest">Buyer Signature</p>
+                                </div>
+                                <div>
+                                    <div className="w-full border-b border-slate-800 mb-2 h-8"></div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest">Seller Signature</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

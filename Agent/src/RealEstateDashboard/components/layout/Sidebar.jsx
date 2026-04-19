@@ -13,9 +13,9 @@ const Sidebar = ({ isOpen, onClose, isClient = false }) => {
 
     const clientNavItems = [
         { name: 'My Dashboard', icon: LayoutDashboard, path: '/client/dashboard' },
-        { name: 'Properties', icon: Home, path: '/dashboard/properties' },
-        { name: 'Market Info', icon: TrendingUp, path: '/dashboard/bids' },
-        { name: 'My Schedule', icon: Clock, path: '/dashboard/deadlines' },
+        { name: 'Properties', icon: Home, path: '/client/properties' },
+        { name: 'Market Info', icon: TrendingUp, path: '/client/market' },
+        { name: 'My Schedule', icon: Clock, path: '/client/schedule' },
     ];
 
     const navItems = isClient ? clientNavItems : agentNavItems;

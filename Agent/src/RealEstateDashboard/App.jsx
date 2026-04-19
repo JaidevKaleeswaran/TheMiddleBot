@@ -51,6 +51,9 @@ function App() {
         }
       >
         <Route path="dashboard" element={<ClientDashboard />} />
+        <Route path="properties" element={<PropertiesList />} />
+        <Route path="market" element={<BidsList />} />
+        <Route path="schedule" element={<DeadlinesList />} />
       </Route>
     </Routes>
   );
